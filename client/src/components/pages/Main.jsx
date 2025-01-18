@@ -1,5 +1,6 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { GoogleLogin, googleLogout } from "@react-oauth/google";
+import Menu from "./Menu";
 
 import "../../utilities.css";
 import "./Main.css";
@@ -7,66 +8,38 @@ import { UserContext } from "../App";
 
 const Main = () => {
   const { userId, handleLogin, handleLogout } = useContext(UserContext);
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handleLoginSuccess = (response) => {
+    handleLogin(response);
+    setShowMenu(true);
+  };
+
+  if (showMenu && userId) {
+    return <Menu handleLogout={handleLogout} />;
+  }
+
   return (
     <>
       <div className="container">
-      {/* <div className="avatar">U</div> */}
-      <div className="avatar">{userId ? (
-        <button
-          onClick={() => {
-            googleLogout();
-            handleLogout();
-          }}
-        >
-          Logout
-        </button>
-      ) : (
-        <GoogleLogin onSuccess={handleLogin} onError={(err) => console.log(err)} />
-      )}</div>
-      
-      <div className="menu">
-      <button className="btn create-room">Create Room</button>
-      <button className="btn enter-key">Enter Room Key</button>
-      <button className="btn join-room">Join a Room</button>
-      <button className="btn train-mode">Train Mode</button>
-    </div>
-
-    <div className="help">
-      <span className="help-icon">?</span>
-    </div>
-    </div>
+        <div className="avatar">
+          {userId ? (
+            <button
+              onClick={() => {
+                googleLogout();
+                handleLogout();
+                setShowMenu(false);
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <GoogleLogin onSuccess={handleLoginSuccess} onError={(err) => console.log(err)} />
+          )}
+        </div>
+      </div>
     </>
   );
 };
 
 export default Main;
-
-
-// <>
-//       <div className="container">
-//       {/* <div className="avatar">U</div> */}
-//       <div className="avatar">{userId ? (
-//         <button
-//           onClick={() => {
-//             googleLogout();
-//             handleLogout();
-//           }}
-//         >
-//           Logout
-//         </button>
-//       ) : (
-//         <GoogleLogin onSuccess={handleLogin} onError={(err) => console.log(err)} />
-//       )}</div>
-      
-//       <div className="menu">
-//       <button className="btn create-room">Create Room</button>
-//       <button className="btn enter-key">Enter Room Key</button>
-//       <button className="btn join-room">Join a Room</button>
-//       <button className="btn train-mode">Train Mode</button>
-//     </div>
-
-//     <div className="help">
-//       <span className="help-icon">?</span>
-//     </div>
-//     </div>
-//     </>
