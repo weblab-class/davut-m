@@ -3,15 +3,20 @@ const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF"
 ITEMS = []
 const INITIAL_RADIUS = 50;
 const MAP_LENGTH =  800;
-const generateRandom = (n) =>{
-    let shuffled = ITEMS.slice();
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        let j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
 
-    return shuffled.slice(0, n);
+const distributeGrids = (n) => {
+  let grids = Array.from({ length: 25 }, (_, i) => i); // Grids labeled from 0 to 24
+  grids.sort(() => Math.random() - 0.5); // Shuffle to randomly assign grids to colors
+  
+  let gridAssignments = {};
+  
+  grids.forEach((grid, i) => {
+      gridAssignments[grid] = i % n;
+  });
+  
+  return gridAssignments;
 }
+
 
 /** Helper to generate a random integer */
 const getRandomInt = (min, max) => {
@@ -31,8 +36,9 @@ const getRandomInt = (min, max) => {
 
 const gameState = {
     winner: null,
-    grids: new Array(5).fill(new Array(5).fill(null)),
+    grids: new Array(25).fill(null),
     players: {},
+    timeLeft: 60, // 60 seconds timer
 }
 
 const checkCollision = (circle1, circle2) => {
@@ -137,8 +143,16 @@ const checkAllCollisions = () => {
   }
 };
 
+const updateTimer = () => {
+  if (gameState.timeLeft > 0) {
+    gameState.timeLeft -= 1/60; // Decrease by 1/60th of a second (since we update 60 times per second)
+  }
+  // When timer hits 0, you can add game end logic here
+};
+
 const updateGameState = () => {
   checkAllCollisions();
+  updateTimer();
 };
 
 module.exports = {
@@ -151,4 +165,5 @@ module.exports = {
     colors,
     getRandomInt,
     getRandomPosition,
+    distributeGrids
   };

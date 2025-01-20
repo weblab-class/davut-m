@@ -14,6 +14,7 @@ const Game = () => {
     const props = useOutletContext();
     const [isSpawn, setIsSpawn] = useState(false);
     const canvasRef = useRef(null);
+    const [timeLeft, setTimeLeft] = useState(60);
 
     // add event listener on mount
     useEffect(() => {
@@ -30,6 +31,7 @@ const Game = () => {
     useEffect(() => {
       socket.on("update", (update) => {
         processUpdate(update);
+        setTimeLeft(Math.ceil(update.timeLeft)); // Round up to nearest second
       });
       return () => {
         socket.off("update");
@@ -65,15 +67,10 @@ const Game = () => {
   // }, []);
 
     return (
-      <>
-        <div>
-          {/* important: canvas needs id to be referenced by canvasManager */}
-          <canvas ref={canvasRef} width="800" height="800" />
-          {/* {loginModal}
-          {winnerModal}
-          {spawnButton} */}
-        </div>
-      </>
+      <div className="Game-container">
+        <div className="Game-timer">Time Left: {timeLeft}s</div>
+        <canvas ref={canvasRef} width={800} height={800} />
+      </div>
     );
   };
   
