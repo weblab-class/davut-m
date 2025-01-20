@@ -2,6 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./components/App";
 import Main from "./components/pages/Main";
+import Game from "./components/pages/Game";
+import Menu from "./components/pages/Menu";
 import NotFound from "./components/pages/NotFound";
 
 import {
@@ -20,6 +22,8 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route errorElement={<NotFound />} element={<App />}>
       <Route path="/" element={<Main />}/>
+      <Route path="/menu/" element={<Menu />}/>
+      <Route path="/create/" element={<Game />} />
     </Route>
   )
 )

@@ -32,6 +32,16 @@ router.get("/whoami", (req, res) => {
   res.send(req.user);
 });
 
+
+router.get("/user", (req, res) => {
+  User.findById(req.query.userid).then((user) => {
+    res.send(user);
+  }).catch((err) => {
+    res.status(500).send('User Not');
+  });
+});
+
+
 router.post("/initsocket", (req, res) => {
   // do nothing if user not logged in
   if (req.user)
@@ -44,6 +54,26 @@ router.post("/initsocket", (req, res) => {
 // |------------------------------|
 
 // anything else falls to this "not found" case
+
+router.get("/activeUsers", (req, res) => {
+  res.send({ activeUsers: socketManager.getAllConnectedUsers() });
+});
+
+router.post("/spawn", (req, res) => {
+  if (req.user) {
+    console.log('spaaawn')
+    socketManager.addUserToGame(req.user);
+  }
+  res.send({});
+});
+
+router.post("/despawn", (req, res) => {
+  if (req.user) {
+    socketManager.removeUserFromGame(req.user);
+  }
+  res.send({});
+});
+
 router.all("*", (req, res) => {
   console.log(`API route not found: ${req.method} ${req.url}`);
   res.status(404).send({ msg: "API route not found" });
