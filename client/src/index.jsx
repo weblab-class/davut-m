@@ -23,7 +23,7 @@ const router = createBrowserRouter(
     <Route errorElement={<NotFound />} element={<App />}>
       <Route path="/" element={<Main />}/>
       <Route path="/menu/" element={<Menu />}/>
-      <Route path="/create/" element={<Game />} />
+      <Route path="/game/:roomId" element={<Game />} />
     </Route>
   )
 )

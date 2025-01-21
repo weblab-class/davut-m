@@ -39,7 +39,7 @@ const drawCircle = (context, x, y, radius, color) => {
 };
 
 /** main draw */
-export const drawCanvas = (drawState, canvasRef, colorCells = {}) => {
+export const drawCanvas = (drawState, canvasRef) => {
     canvas = canvasRef.current;
     if (!canvas) return;
     const context = canvas.getContext("2d");
@@ -59,9 +59,9 @@ export const drawCanvas = (drawState, canvasRef, colorCells = {}) => {
             const centerX = col * cellWidth + cellWidth / 2;
             const centerY = row * cellHeight + cellHeight / 2;
             
-            if (colorCells[index]) {
+            if (drawState.grids[index]) {
                 // Draw colored cell
-                context.fillStyle = colorCells[index];
+                context.fillStyle = drawState.grids[index];
                 context.fillRect(
                     col * cellWidth,
                     row * cellHeight,
