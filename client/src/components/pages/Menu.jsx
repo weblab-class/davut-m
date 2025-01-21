@@ -22,7 +22,6 @@ const Menu = () => {
   };
 
   const handleCreateRoomClick = () => {
-    // Generate a random 6-digit passcode
     const passcode = Math.floor(100000 + Math.random() * 900000).toString();
     socket.emit("create-room", { userId, passcode }, (response) => {
       if (response.success) {
@@ -47,24 +46,40 @@ const Menu = () => {
   };
 
   return (
-    <>
-      <div className="container">
-        <div className="avatar">
-          <button onClick={handleLogoutClick}>
-            Logout
-          </button>
+    <div className="menu-container">
+      <div className="menu-header">
+        <h1>MemoRun</h1>
+        <button className="logout-button" onClick={handleLogoutClick}>
+          <span className="logout-icon">👤</span>
+          Logout
+        </button>
+      </div>
+
+      <div className="menu-content">
+        <div className="menu-title">
+          <h2>Game Menu</h2>
+          <p>Choose your game mode</p>
         </div>
-        
-        <div className="menu">
-          <button className="btn create-room" onClick={handleCreateRoomClick}>Create Room</button>
-          <button className="btn enter-key" onClick={() => setShowJoinDialog(true)}>Join with Passcode</button>
-          <button className="btn train-mode">Train Mode</button>
+
+        <div className="menu-buttons">
+          <button className="menu-btn create-room" onClick={handleCreateRoomClick}>
+            <span className="btn-icon">🎮</span>
+            Create Room
+          </button>
+          <button className="menu-btn join-room" onClick={() => setShowJoinDialog(true)}>
+            <span className="btn-icon">🔑</span>
+            Join with Passcode
+          </button>
+          <button className="menu-btn train-mode">
+            <span className="btn-icon">🎯</span>
+            Training Mode
+          </button>
         </div>
 
         {showJoinDialog && (
           <div className="dialog-overlay">
             <div className="dialog">
-              <h2>Enter Room Passcode</h2>
+              <h2>Join Room</h2>
               {error && <p className="error">{error}</p>}
               <form onSubmit={handleJoinRoom}>
                 <input
@@ -77,23 +92,32 @@ const Menu = () => {
                   required
                 />
                 <div className="dialog-buttons">
-                  <button type="submit">Join</button>
-                  <button type="button" onClick={() => {
-                    setShowJoinDialog(false);
-                    setError("");
-                    setRoomPasscode("");
-                  }}>Cancel</button>
+                  <button type="submit" className="btn-primary">Join Game</button>
+                  <button 
+                    type="button" 
+                    className="btn-secondary"
+                    onClick={() => {
+                      setShowJoinDialog(false);
+                      setError("");
+                      setRoomPasscode("");
+                    }}
+                  >
+                    Cancel
+                  </button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        <div className="help">
-          <span className="help-icon">?</span>
+        <div className="help-section">
+          <button className="help-button">
+            <span className="help-icon">?</span>
+            <span className="help-text">Need Help?</span>
+          </button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
