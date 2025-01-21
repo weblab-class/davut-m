@@ -74,6 +74,22 @@ router.post("/despawn", (req, res) => {
   res.send({});
 });
 
+router.post("/startgame", (req, res) => {
+  if (req.user) {
+    socketManager.startGame();
+  }
+  res.send({});
+});
+
+router.get("/ishost", (req, res) => {
+  if (req.user) {
+    const isHost = socketManager.isUserHost(req.user._id);
+    res.send({ isHost });
+  } else {
+    res.send({ isHost: false });
+  }
+});
+
 router.all("*", (req, res) => {
   console.log(`API route not found: ${req.method} ${req.url}`);
   res.status(404).send({ msg: "API route not found" });

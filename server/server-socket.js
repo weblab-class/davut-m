@@ -1,6 +1,7 @@
 const gameLogic = require("./game-logic");
 
 let io;
+let gameInterval = null;
 
 const userToSocketMap = {}; // maps user ID to socket object
 const socketToUserMap = {}; // maps socket ID to user object
@@ -19,22 +20,19 @@ const sendGameState = () => {
 /** Start running game: game loop emits game states to all clients at 60 frames per second */
 const startRunningGame = () => {
   let winResetTimer = 0;
-  setInterval(() => {
+  if (gameInterval) {
+    clearInterval(gameInterval);
+  }
+  gameInterval = setInterval(() => {
     gameLogic.updateGameState();
     sendGameState();
-
-    // // Reset game 5 seconds after someone wins.
-    // if (gameLogic.gameState.winner != null) {
-    //   winResetTimer += 1;
-    // }
-    // if (winResetTimer > 60 * 5) {
-    //   winResetTimer = 0;
-    //   gameLogic.resetWinner();
-    // }
   }, 1000 / 60); // 60 frames per second
 };
 
-startRunningGame();
+const startGame = () => {
+  gameLogic.startGame();
+  startRunningGame();
+};
 
 const addUserToGame = (user) => {
   console.log(`Adding user ${user._id} to game`);
@@ -100,6 +98,16 @@ const leaveRoom = (userId) => {
   }
 };
 
+const isUserHost = (userId) => {
+  // Check all rooms to see if user is a host in any of them
+  for (const [roomId, room] of rooms.entries()) {
+    if (room.host === userId) {
+      return true;
+    }
+  }
+  return false;
+};
+
 module.exports = {
   init: (http) => {
     io = require("socket.io")(http);
@@ -153,5 +161,7 @@ module.exports = {
   getAllConnectedUsers: getAllConnectedUsers,
   addUserToGame: addUserToGame,
   // removeUserFromGame: removeUserFromGame,
+  startGame: startGame,
+  isUserHost: isUserHost,
   getIo: () => io,
 };

@@ -39,6 +39,7 @@ const gameState = {
     grids: new Array(25).fill(null),
     players: {},
     timeLeft: 60, // 60 seconds timer
+    isStarted: false,
 }
 
 const checkCollision = (circle1, circle2) => {
@@ -143,11 +144,15 @@ const checkAllCollisions = () => {
   }
 };
 
+const startGame = () => {
+  gameState.isStarted = true;
+  gameState.timeLeft = 60;
+};
+
 const updateTimer = () => {
-  if (gameState.timeLeft > 0) {
+  if (gameState.isStarted && gameState.timeLeft > 0) {
     gameState.timeLeft -= 1/60; // Decrease by 1/60th of a second (since we update 60 times per second)
   }
-  // When timer hits 0, you can add game end logic here
 };
 
 const updateGameState = () => {
@@ -159,9 +164,8 @@ module.exports = {
     gameState,
     spawnPlayer,
     movePlayer,
-    // removePlayer,
     updateGameState,
-    // resetWinner,
+    startGame,
     colors,
     getRandomInt,
     getRandomPosition,

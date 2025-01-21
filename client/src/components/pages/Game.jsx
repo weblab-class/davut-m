@@ -13,12 +13,19 @@ import "./Game.css";
 const Game = () => {
     const props = useOutletContext();
     const [isSpawn, setIsSpawn] = useState(false);
+    const [gameStarted, setGameStarted] = useState(false);
+    const [isHost, setIsHost] = useState(false);
     const canvasRef = useRef(null);
     const [timeLeft, setTimeLeft] = useState(60);
 
     // add event listener on mount
     useEffect(() => {
       window.addEventListener("keydown", handleInput);
+
+      // Check if user is host
+      get("/api/ishost").then((data) => {
+        setIsHost(data.isHost);
+      });
 
       // remove event listener on unmount
       return () => {
@@ -66,10 +73,23 @@ const Game = () => {
   //     drawCanvas({}, canvasRef);
   // }, []);
 
+    const handleStartGame = () => {
+      if (!gameStarted) {
+        post("/api/startgame").then(() => {
+          setGameStarted(true);
+        });
+      }
+    };
+
     return (
       <div className="Game-container">
         <div className="Game-timer">Time Left: {timeLeft}s</div>
         <canvas ref={canvasRef} width={800} height={800} />
+        {!gameStarted && isHost && (
+          <button className="Game-startButton" onClick={handleStartGame}>
+            Start Game
+          </button>
+        )}
       </div>
     );
   };
