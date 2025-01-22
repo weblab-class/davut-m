@@ -16,6 +16,7 @@ const Game = () => {
     const [gameStarted, setGameStarted] = useState(false);
     const [isHost, setIsHost] = useState(false);
     const canvasRef = useRef(null);
+    const smallCanvasRef = useRef(null);
     const [timeLeft, setTimeLeft] = useState(60);
 
     // add event listener on mount
@@ -85,7 +86,10 @@ const Game = () => {
     return (
       <div className="Game-container">
         <div className="Game-timer">Time Left: {timeLeft}s</div>
-        <canvas ref={canvasRef} width={800} height={800} />
+        <div className="Game-canvasContainer">
+          <canvas ref={canvasRef} width={800} height={800} />
+          <canvas ref={smallCanvasRef} width={100} height={100} className="Game-smallCanvas" />
+        </div>
         {!gameStarted && isHost && (
           <button className="Game-startButton" onClick={handleStartGame}>
             Start Game
@@ -96,4 +100,3 @@ const Game = () => {
   };
   
   export default Game;
-  

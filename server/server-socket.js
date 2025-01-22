@@ -48,12 +48,13 @@ const round1Reveal = async () => {
 };
 
 const clearGrids = () => {
+  // gameLogic.gameState.grids_copy = Object.assign({}, gameLogic.gameState.grids);
   gameLogic.gameState.grids = {};
 }
 /** Start running game: game loop emits game states to all clients at 60 frames per second */
 const startRunningGame = async () => {
   let winResetTimer = 0;
-  
+  gameLogic.correctColor(3);
   // Wait for all reveals to complete before starting the game loop
   await round1Reveal();
   await clearGrids();

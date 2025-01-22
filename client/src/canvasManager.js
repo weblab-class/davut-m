@@ -115,3 +115,13 @@ export const drawCanvas = (drawState, canvasRef) => {
       // console.log('holaaaa1')
     });
 };
+
+export const drawSmallCanvas = (drawState, canvasRef) => {
+  canvas = canvasRef.current;
+    if (!canvas) return;
+  const context = canvas.getContext("2d");
+  // clear the canvas to black
+  context.fillStyle = drawState.correctColor;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+}

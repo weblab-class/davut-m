@@ -3,7 +3,7 @@ const colors = [
   "#800000", "#808000", "#008000", "#800080", "#808080", "#008080",
   "#C0C0C0", "#FF4500", "#FFD700", "#ADFF2F", "#32CD32", "#00FA9A",
   "#20B2AA", "#4682B4", "#4169E1", "#4B0082", "#8A2BE2", "#FF1493",
-  "#DC143C"
+  "#DC143C", '#16213e',
 ];
 
 
@@ -56,7 +56,7 @@ const distributeGrids = (n) => {
       groupCounts[minGroup]++;
       if (groupCounts[minGroup] > targetCount) extra--; // Reduce extra allocation once assigned
   });
-
+  gameState.grids_copy = Object.assign({}, gridAssignments); // Save the original gridAssignments;
   return divideIntoGroups(gridAssignments);
 };
 
@@ -81,8 +81,9 @@ const getRandomInt = (min, max) => {
 
 const gameState = {
     winner: null,
-    grids: new Array(25).fill(null),
+    grids: {},
     players: {},
+    correctColor: null,
     timeLeft: 60, // 60 seconds timer
     isStarted: false,
 }
@@ -189,6 +190,59 @@ const checkAllCollisions = () => {
   }
 };
 
+const correctColor = (n) => {
+  gameState.correctColor = colors[getRandomInt(0, n)];
+};
+
+const getCellFromPosition = (x, y) => {
+  // Canvas is divided into 5x5 grid, each cell is 100x100
+  const cellSize = 800/5;
+  const gridSize = 5;
+  
+  // Calculate row and column
+  const col = Math.floor(x / cellSize);
+  const row = Math.floor(y / cellSize);
+  
+  // Convert to cell number (0-24)
+  // Cell numbers go from left to right, top to bottom
+  const cellNumber = row * gridSize + col;
+  
+  // Ensure the result is within valid range
+  return Math.max(0, Math.min(24, cellNumber));
+}
+const roundEndReveal = () => {
+  const new_grid = {};
+  if (gameState.grids_copy) {
+    for (const [key, value] of Object.entries(gameState.grids_copy)) {
+      if (value !== gameState.correctColor) {
+        new_grid[key] = '#16213e';
+    } else {
+        new_grid[key] = value;
+    }
+  }
+  console.log(gameState);
+  gameState.grids = new_grid;
+}}
+
+const removePlayer = (id) => {
+  if (gameState.players[id] != undefined) {
+    delete gameState.players[id];
+  }
+};
+
+const checkWin = () => {
+  const winners = [];
+  for (const [key, value] of Object.entries(gameState.players)){
+    const cell_number = getCellFromPosition(value.position.x, value.position.y);
+    if (gameState.grids_copy[cell_number] !== gameState.correctColor) {
+      removePlayer(key);
+    }
+    else{
+      winners.push(key);
+    }
+  }
+  gameState.winner = winners;
+}
 const startGame = () => {
   gameState.isStarted = true;
   gameState.timeLeft = 60;
@@ -203,6 +257,10 @@ const updateTimer = () => {
 const updateGameState = () => {
   checkAllCollisions();
   updateTimer();
+  if (gameState.timeLeft <=0) {
+    roundEndReveal();
+    checkWin();
+  }
 };
 
 module.exports = {
@@ -214,5 +272,10 @@ module.exports = {
     colors,
     getRandomInt,
     getRandomPosition,
-    distributeGrids
+    distributeGrids,
+    correctColor,
+    getCellFromPosition,
   };
+
+
+
