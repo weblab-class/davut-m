@@ -1,4 +1,5 @@
 const gameLogic = require("./game-logic");
+const User = require("./models/user");
 
 let io;
 let gameInterval = null;
@@ -88,7 +89,7 @@ const removeUserFromGame = (user) => {
   gameLogic.removePlayer(user._id);
 };
 
-const addUser = (user, socket) => {
+const addUser = async (user, socket) => {
   const oldSocket = userToSocketMap[user._id];
   if (oldSocket && oldSocket.id !== socket.id) {
     // there was an old tab open for this user, force it to disconnect
@@ -96,44 +97,65 @@ const addUser = (user, socket) => {
     delete socketToUserMap[oldSocket.id];
   }
 
+  // Update user's last active timestamp
+  await User.findByIdAndUpdate(user._id, { 
+    lastActive: new Date(),
+    currentRoom: null // Reset room on new connection
+  });
+
   userToSocketMap[user._id] = socket;
   socketToUserMap[socket.id] = user;
   io.emit("activeUsers", { activeUsers: getAllConnectedUsers() });
 };
 
-const removeUser = (user, socket) => {
+const removeUser = async (user, socket) => {
   if (user) {
     delete userToSocketMap[user._id];
     removeUserFromGame(user); // Remove user from game if they disconnect
+    
+    // Update user's status in database
+    await User.findByIdAndUpdate(user._id, { 
+      currentRoom: null,
+      lastActive: new Date()
+    });
   }
   delete socketToUserMap[socket.id];
   io.emit("activeUsers", { activeUsers: getAllConnectedUsers() });
 };
 
-const createRoom = (userId, passcode) => {
+const createRoom = async (userId, passcode) => {
   const roomId = Math.random().toString(36).substring(7);
   rooms.set(roomId, {
     passcode,
     players: new Set([userId]),
     host: userId,
   });
+  
+  // Update user's current room in database
+  await User.findByIdAndUpdate(userId, { currentRoom: roomId });
+  
   return roomId;
 };
 
-const joinRoom = (userId, passcode) => {
+const joinRoom = async (userId, passcode) => {
   for (const [roomId, room] of rooms.entries()) {
     if (room.passcode === passcode) {
       room.players.add(userId);
+      // Update user's current room in database
+      await User.findByIdAndUpdate(userId, { currentRoom: roomId });
       return { success: true, roomId };
     }
   }
   return { success: false };
 };
 
-const leaveRoom = (userId) => {
+const leaveRoom = async (userId) => {
   for (const [roomId, room] of rooms.entries()) {
     if (room.players.has(userId)) {
       room.players.delete(userId);
+      // Update user's status in database
+      await User.findByIdAndUpdate(userId, { currentRoom: null });
+      
       // Clean up empty rooms
       if (room.players.size === 0) {
         rooms.delete(roomId);
@@ -164,10 +186,10 @@ module.exports = {
     io.on("connection", (socket) => {
       console.log(`socket has connected ${socket.id}`);
       
-      socket.on("disconnect", (reason) => {
+      socket.on("disconnect", async (reason) => {
         const user = getUserFromSocketID(socket.id);
         if (user) {
-          const roomId = leaveRoom(user._id);
+          const roomId = await leaveRoom(user._id);
           if (roomId) {
             socket.leave(roomId);
             io.to(roomId).emit("player-left", { userId: user._id });
@@ -175,9 +197,9 @@ module.exports = {
         }
       });
 
-      socket.on("create-room", ({ userId, passcode }, callback) => {
+      socket.on("create-room", async ({ userId, passcode }, callback) => {
         try {
-          const roomId = createRoom(userId, passcode);
+          const roomId = await createRoom(userId, passcode);
           socket.join(roomId);
           callback({ success: true, roomId });
         } catch (error) {
@@ -185,13 +207,25 @@ module.exports = {
         }
       });
 
-      socket.on("join-room", ({ userId, passcode }, callback) => {
-        const result = joinRoom(userId, passcode);
+      socket.on("join-room", async ({ userId, passcode }, callback) => {
+        const result = await joinRoom(userId, passcode);
         if (result.success) {
           socket.join(result.roomId);
           io.to(result.roomId).emit("player-joined", { userId });
         }
         callback(result);
+      });
+
+      socket.on("game-end", async (gameResult) => {
+        const user = getUserFromSocketID(socket.id);
+        if (user) {
+          try {
+            const dbUser = await User.findById(user._id);
+            await dbUser.updateGameStats(gameResult);
+          } catch (error) {
+            console.error("Failed to update game stats:", error);
+          }
+        }
       });
 
       socket.on("move", (dir) => {
