@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { socket } from "../../client-socket.js";
 import { get, post } from "../../utilities";
-import { drawCanvas} from "../../canvasManager";
+import { drawCanvas, drawSmallCanvas } from "../../canvasManager";
 import { handleInput } from "../../input";
 import { useOutletContext } from "react-router-dom";
 
@@ -66,6 +66,7 @@ const Game = () => {
       //   setWinnerModal(null);
       // }
       drawCanvas(update, canvasRef);
+      drawSmallCanvas(update, smallCanvasRef);
     };
     
     
