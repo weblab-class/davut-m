@@ -38,8 +38,11 @@ const drawCircle = (context, x, y, radius, color) => {
   fillCircle(context, drawX, drawY, radius, color);
 };
 
+
+const example = {3:"#FFD700", 5:"#FFD700", 18:"#FFD700"}
 /** main draw */
 export const drawCanvas = (drawState, canvasRef) => {
+    // drawState.grids = example;
     canvas = canvasRef.current;
     if (!canvas) return;
     const context = canvas.getContext("2d");
@@ -59,9 +62,9 @@ export const drawCanvas = (drawState, canvasRef) => {
             const centerX = col * cellWidth + cellWidth / 2;
             const centerY = row * cellHeight + cellHeight / 2;
             
-            if (drawState.grids[index]) {
+            if (drawState.grids[String(index)]) {
                 // Draw colored cell
-                context.fillStyle = drawState.grids[index];
+                context.fillStyle = drawState.grids[String(index)];
                 context.fillRect(
                     col * cellWidth,
                     row * cellHeight,
@@ -109,6 +112,6 @@ export const drawCanvas = (drawState, canvasRef) => {
     // console.log(drawState)
     Object.values(drawState.players).forEach((p) => {
       drawCircle(context, p.position.x, p.position.y, p.radius, p.color);
-      console.log('holaaaa1')
+      // console.log('holaaaa1')
     });
 };

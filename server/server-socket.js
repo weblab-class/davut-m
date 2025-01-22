@@ -17,13 +17,47 @@ const sendGameState = () => {
   io.emit("update", gameLogic.gameState);
 };
 
+const updateGrids = (colorReveals) => {
+  gameLogic.gameState.grids = colorReveals;
+}
+
+const round_reveal = (colorReveals) => {
+  return new Promise((resolve) => {
+    gameLogic.gameState.grids = colorReveals;
+    gameLogic.updateGameState();
+    sendGameState();
+    
+    // After 5 seconds, resolve the promise
+    setTimeout(() => {
+      resolve();
+    }, 5000);
+  });
+};
+
+const round1Reveal = async () => {
+  const gridAssignments = gameLogic.distributeGrids(3);
+  console.log(gridAssignments);
+  
+  // Reveal each round sequentially
+  await round_reveal(gridAssignments['1']);
+  await round_reveal(gridAssignments['2']);
+  await round_reveal(gridAssignments['3']);
+  
+  console.log('finished round 1 reveals');
+  return Promise.resolve();
+};
+
+const clearGrids = () => {
+  gameLogic.gameState.grids = {};
+}
 /** Start running game: game loop emits game states to all clients at 60 frames per second */
-const startRunningGame = () => {
+const startRunningGame = async () => {
   let winResetTimer = 0;
-  if (gameInterval) {
-    clearInterval(gameInterval);
-  }
-  gameInterval = setInterval(() => {
+  
+  // Wait for all reveals to complete before starting the game loop
+  await round1Reveal();
+  await clearGrids();
+  setInterval(() => {
     gameLogic.updateGameState();
     sendGameState();
   }, 1000 / 60); // 60 frames per second
@@ -39,9 +73,9 @@ const addUserToGame = (user) => {
   gameLogic.spawnPlayer(user._id);
 };
 
-// const removeUserFromGame = (user) => {
-//   gameLogic.removePlayer(user._id);
-// };
+const removeUserFromGame = (user) => {
+  gameLogic.removePlayer(user._id);
+};
 
 const addUser = (user, socket) => {
   const oldSocket = userToSocketMap[user._id];
@@ -56,14 +90,14 @@ const addUser = (user, socket) => {
   io.emit("activeUsers", { activeUsers: getAllConnectedUsers() });
 };
 
-// const removeUser = (user, socket) => {
-//   if (user) {
-//     delete userToSocketMap[user._id];
-//     removeUserFromGame(user); // Remove user from game if they disconnect
-//   }
-//   delete socketToUserMap[socket.id];
-//   io.emit("activeUsers", { activeUsers: getAllConnectedUsers() });
-// };
+const removeUser = (user, socket) => {
+  if (user) {
+    delete userToSocketMap[user._id];
+    removeUserFromGame(user); // Remove user from game if they disconnect
+  }
+  delete socketToUserMap[socket.id];
+  io.emit("activeUsers", { activeUsers: getAllConnectedUsers() });
+};
 
 const createRoom = (userId, passcode) => {
   const roomId = Math.random().toString(36).substring(7);
@@ -153,14 +187,14 @@ module.exports = {
   },
 
   addUser: addUser,
-  // removeUser: removeUser,
+  removeUser: removeUser,
 
   getSocketFromUserID: getSocketFromUserID,
   getUserFromSocketID: getUserFromSocketID,
   getSocketFromSocketID: getSocketFromSocketID,
   getAllConnectedUsers: getAllConnectedUsers,
   addUserToGame: addUserToGame,
-  // removeUserFromGame: removeUserFromGame,
+  removeUserFromGame: removeUserFromGame,
   startGame: startGame,
   isUserHost: isUserHost,
   getIo: () => io,

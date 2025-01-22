@@ -1,21 +1,66 @@
-const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF"];
+const colors = [
+  "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
+  "#800000", "#808000", "#008000", "#800080", "#808080", "#008080",
+  "#C0C0C0", "#FF4500", "#FFD700", "#ADFF2F", "#32CD32", "#00FA9A",
+  "#20B2AA", "#4682B4", "#4169E1", "#4B0082", "#8A2BE2", "#FF1493",
+  "#DC143C"
+];
+
 
 ITEMS = []
 const INITIAL_RADIUS = 50;
 const MAP_LENGTH =  800;
 
+
+function divideIntoGroups(obj) {
+  const keys = Object.keys(obj);
+  
+  // Shuffle the keys randomly
+  for (let i = keys.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [keys[i], keys[j]] = [keys[j], keys[i]];
+  }
+
+  // Initialize the groups
+  const groups = { '1': {}, '2': {}, '3': {} };
+  
+  // Distribute keys into groups
+  keys.forEach((key, index) => {
+      const groupNum = (index % 3) + 1;
+      groups[groupNum][key] = obj[key];
+  });
+
+  return groups;
+}
+
+
 const distributeGrids = (n) => {
   let grids = Array.from({ length: 25 }, (_, i) => i); // Grids labeled from 0 to 24
-  grids.sort(() => Math.random() - 0.5); // Shuffle to randomly assign grids to colors
-  
+
+  // Fisher-Yates shuffle for better randomization
+  for (let i = grids.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      [grids[i], grids[j]] = [grids[j], grids[i]];
+  }
+
   let gridAssignments = {};
   
-  grids.forEach((grid, i) => {
-      gridAssignments[grid] = i % n;
+  // Even distribution of grids across n groups
+  let groupCounts = Array(n).fill(0);
+  let targetCount = Math.floor(25 / n);
+  let extra = 25 % n; // Some groups will have one extra grid
+
+  grids.forEach((grid) => {
+      let minGroup = groupCounts.findIndex(count => count < targetCount + (extra > 0 ? 1 : 0));
+      gridAssignments[grid] = colors[minGroup];
+      groupCounts[minGroup]++;
+      if (groupCounts[minGroup] > targetCount) extra--; // Reduce extra allocation once assigned
   });
-  
-  return gridAssignments;
-}
+
+  return divideIntoGroups(gridAssignments);
+};
+
+
 
 
 /** Helper to generate a random integer */

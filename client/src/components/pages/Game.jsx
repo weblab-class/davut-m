@@ -75,7 +75,8 @@ const Game = () => {
 
     const handleStartGame = () => {
       if (!gameStarted) {
-        post("/api/startgame").then(() => {
+          console.log('handleStartGame');
+          post("/api/startgame").then(() => {
           setGameStarted(true);
         });
       }

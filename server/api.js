@@ -74,6 +74,12 @@ router.post("/despawn", (req, res) => {
   res.send({});
 });
 
+  /**
+   * POST /api/startgame
+   * Starts the game if the user is logged in.
+   * @param {Object} req - Express request object.
+   * @param {Object} res - Express response object.
+   */
 router.post("/startgame", (req, res) => {
   if (req.user) {
     socketManager.startGame();
