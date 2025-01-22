@@ -272,28 +272,89 @@
 }
 
 .help-section {
-  margin-top: 3rem;
+  margin-top: 20px;
+  position: relative;
+}
+
+.help-tooltip-container {
+  position: relative;
+  display: inline-block;
 }
 
 .help-button {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: var(--card-bg);
-  border: 1px solid rgba(0, 243, 255, 0.2);
-  color: white;
-  padding: 0.6rem 1.2rem;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin: 0 auto;
-  backdrop-filter: blur(10px);
+  gap: 8px;
+  transition: background-color 0.3s;
 }
 
 .help-button:hover {
-  background: rgba(0, 243, 255, 0.1);
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+  background: #357abd;
+}
+
+.help-icon {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.help-text {
+  font-size: 16px;
+}
+
+.help-tooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: none;
+  z-index: 1000;
+  border: 1px solid #eee;
+}
+
+.help-tooltip h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.help-tooltip p {
+  margin: 8px 0;
+  color: #666;
+}
+
+.help-tooltip ul {
+  margin: 8px 0;
+  padding-left: 20px;
+  color: #666;
+}
+
+.help-tooltip li {
+  margin: 5px 0;
+}
+
+.help-tooltip-container:hover .help-tooltip {
+  display: block;
+}
+
+.help-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 10px 10px;
+  border-style: solid;
+  border-color: transparent transparent white;
 }
 
 @media (max-width: 768px) {
