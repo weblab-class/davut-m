@@ -86,6 +86,7 @@ const gameState = {
     correctColor: null,
     timeLeft: 60, // 60 seconds timer
     isStarted: false,
+    lastUpdateTime: null,
 }
 
 const checkCollision = (circle1, circle2) => {
@@ -246,11 +247,20 @@ const checkWin = () => {
 const startGame = () => {
   gameState.isStarted = true;
   gameState.timeLeft = 60;
+  gameState.lastUpdateTime = Date.now(); // Add timestamp for tracking actual elapsed time
 };
 
 const updateTimer = () => {
   if (gameState.isStarted && gameState.timeLeft > 0) {
-    gameState.timeLeft -= 1/60; // Decrease by 1/60th of a second (since we update 60 times per second)
+    const now = Date.now();
+    const elapsed = (now - gameState.lastUpdateTime) / 1000; // Convert to seconds
+    gameState.timeLeft -= elapsed;
+    gameState.lastUpdateTime = now;
+    
+    // Ensure we don't go below 0
+    if (gameState.timeLeft < 0) {
+      gameState.timeLeft = 0;
+    }
   }
 };
 
@@ -276,6 +286,3 @@ module.exports = {
     correctColor,
     getCellFromPosition,
   };
-
-
-

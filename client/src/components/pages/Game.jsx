@@ -48,7 +48,6 @@ const Game = () => {
     
     useEffect(() => {
       if (props.userId) {
-        post("/api/spawn", { userid: props.userId });
         return () => {
           // Cleanup: despawn when component unmounts
           post("/api/despawn", { userid: props.userId });
@@ -76,9 +75,12 @@ const Game = () => {
   // }, []);
 
     const handleStartGame = () => {
-      if (!gameStarted) {
-          console.log('handleStartGame');
-          post("/api/startgame").then(() => {
+      if (!gameStarted && isHost) {
+        // Spawn all players when game starts
+        if (props.userId) {
+          post("/api/spawn", { userid: props.userId });
+        }
+        post("/api/startgame").then(() => {
           setGameStarted(true);
         });
       }
