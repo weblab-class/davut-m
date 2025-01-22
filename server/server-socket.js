@@ -34,6 +34,13 @@ const round_reveal = (colorReveals) => {
   });
 };
 
+// const justAwait = () => new Promise((resolve) => {setTimeout(resolve, 5000)
+//   gameLogic.correctColor(3);
+// });
+
+const guessColor = ()=>{
+  gameLogic.correctColor(3);
+}
 const round1Reveal = async () => {
   const gridAssignments = gameLogic.distributeGrids(3);
   console.log(gridAssignments);
@@ -54,10 +61,13 @@ const clearGrids = () => {
 /** Start running game: game loop emits game states to all clients at 60 frames per second */
 const startRunningGame = async () => {
   let winResetTimer = 0;
-  gameLogic.correctColor(3);
+  await clearColor();
+  
   // Wait for all reveals to complete before starting the game loop
   await round1Reveal();
   await clearGrids();
+  await guessColor();
+  
   setInterval(() => {
     gameLogic.updateGameState();
     sendGameState();
@@ -133,6 +143,10 @@ const leaveRoom = (userId) => {
   }
 };
 
+const clearColor = () => {
+  gameLogic.gameState.grids = {};
+  gameLogic.gameState.correctColor = null;
+}
 const isUserHost = (userId) => {
   // Check all rooms to see if user is a host in any of them
   for (const [roomId, room] of rooms.entries()) {
