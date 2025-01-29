@@ -1,0 +1,16 @@
+.SingleMessage-container {
+  padding: 8px;
+  background: rgba(0, 243, 255, 0.1);
+  border-radius: 8px;
+  margin: 4px 0;
+}
+
+.SingleMessage-sender {
+  color: var(--neon-blue);
+  margin-right: 8px;
+}
+
+.SingleMessage-content {
+  color: white;
+  word-break: break-word;
+}

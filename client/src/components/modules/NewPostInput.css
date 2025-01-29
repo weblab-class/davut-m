@@ -1,0 +1,28 @@
+.NewPostInput-input {
+  flex-grow: 1;
+  border: 1px solid var(--neon-blue);
+  border-radius: 4px;
+  padding: 8px;
+  margin-right: 8px;
+  background: rgba(0, 243, 255, 0.1);
+  color: white;
+}
+
+.NewPostInput-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.NewPostInput-button {
+  background: var(--neon-blue);
+  color: var(--dark-bg);
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.NewPostInput-button:hover {
+  background: var(--neon-purple);
+  color: white;
+}

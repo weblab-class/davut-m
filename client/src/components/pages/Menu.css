@@ -357,6 +357,42 @@
   border-color: transparent transparent white;
 }
 
+.menu-header,
+.menu-content,
+.menu-buttons {
+  transition: width 0.3s ease;
+  width: 100%;
+}
+
+.menu-container.with-chat .menu-header.shifted,
+.menu-container.with-chat .menu-content.shifted,
+.menu-container.with-chat .menu-buttons.shifted {
+  width: 60%;
+}
+
+.menu-chatContainer {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 40%;
+  height: 100vh;
+  background: var(--card-bg);
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
+  overflow-y: auto;
+  z-index: 10;
+  border-left: 1px solid rgba(0, 243, 255, 0.2);
+  animation: slideIn 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 @media (max-width: 768px) {
   .menu-container {
     padding: 1rem;

@@ -11,6 +11,7 @@ const express = require("express");
 
 // import models so we can interact with the database
 const User = require("./models/user");
+const Message = require("./models/message");
 
 // import authentication library
 const auth = require("./auth");
@@ -43,15 +44,44 @@ router.get("/user", (req, res) => {
 
 
 router.post("/initsocket", (req, res) => {
-  // do nothing if user not logged in
-  if (req.user)
-    socketManager.addUser(req.user, socketManager.getSocketFromSocketID(req.body.socketid));
+  if (req.user) {
+    const socket = socketManager.getSocketFromSocketID(req.body.socketid);
+    if (socket) {
+      socketManager.addUser(req.user, socket);
+    }
+  }
   res.send({});
 });
 
 // |------------------------------|
 // | write your API methods below!|
 // |------------------------------|
+
+// Message routes
+router.get("/messages", (req, res) => {
+  Message.find({}).then((messages) => {
+    res.send(messages);
+  });
+});
+
+router.post("/message", auth.ensureLoggedIn, (req, res) => {
+  const newMessage = new Message({
+    sender: {
+      _id: req.user._id,
+      name: req.user.name,
+    },
+    recipient: req.body.recipient,
+    content: req.body.content,
+  });
+
+  newMessage.save().then((message) => {
+    const io = socketManager.getIo();
+    if (io) {
+      io.emit("message", message);
+    }
+    res.send(message);
+  });
+});
 
 // anything else falls to this "not found" case
 

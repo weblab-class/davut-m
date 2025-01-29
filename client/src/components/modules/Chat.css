@@ -1,0 +1,43 @@
+.Chat-container {
+  height: 100%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: white;
+}
+
+.Chat-container h3 {
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+  color: var(--neon-blue);
+}
+
+.Chat-historyContainer {
+  flex-grow: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 8px;
+}
+
+.Chat-historyContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.Chat-historyContainer::-webkit-scrollbar-track {
+  background: rgba(0, 243, 255, 0.1);
+  border-radius: 4px;
+}
+
+.Chat-historyContainer::-webkit-scrollbar-thumb {
+  background: var(--neon-blue);
+  border-radius: 4px;
+}
+
+.Chat-newContainer {
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 243, 255, 0.2);
+}

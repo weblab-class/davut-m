@@ -6,6 +6,7 @@ import "../../utilities.css";
 import "./Menu.css";
 import { UserContext } from "../App";
 import { socket } from "../../client-socket";
+import Chat from "../modules/Chat";
 
 const Menu = () => {
   const { userId, handleLogout } = useContext(UserContext);
@@ -13,6 +14,7 @@ const Menu = () => {
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [roomPasscode, setRoomPasscode] = useState("");
   const [error, setError] = useState("");
+  const [showChat, setShowChat] = useState(false);
 
   const handleLogoutClick = () => {
     googleLogout();
@@ -138,22 +140,22 @@ const Menu = () => {
   }, []);
 
   return (
-    <div className="menu-container">
-      <div className="menu-header">
+    <div className={`menu-container ${showChat ? 'with-chat' : ''}`}>
+      <header className={`menu-header ${showChat ? 'shifted' : ''}`}>
         <h1>MemoRun</h1>
         <button className="logout-button" onClick={handleLogoutClick}>
           <span className="logout-icon">👤</span>
           Logout
         </button>
-      </div>
+      </header>
 
-      <div className="menu-content">
-        <div className="menu-title">
+      <main className={`menu-content ${showChat ? 'shifted' : ''}`}>
+        <section className="menu-title">
           <h2>Game Menu</h2>
           <p>Choose your game mode</p>
-        </div>
+        </section>
 
-        <div className="menu-buttons">
+        <section className={`menu-buttons ${showChat ? 'shifted' : ''}`}>
           <button className="menu-btn create-room" onClick={handleCreateRoomClick}>
             <span className="btn-icon">🎮</span>
             Create Room
@@ -162,11 +164,15 @@ const Menu = () => {
             <span className="btn-icon">🔑</span>
             Join with Passcode
           </button>
-          <button className="menu-btn train-mode">
+          <button
+            type="button"
+            className="menu-btn"
+            onClick={() => setShowChat(!showChat)}
+          >
             <span className="btn-icon">🎯</span>
-            Training Mode
+            Chat
           </button>
-        </div>
+        </section>
 
         {showJoinDialog && (
           <div className="dialog-overlay">
@@ -202,6 +208,15 @@ const Menu = () => {
           </div>
         )}
 
+        {showChat && (
+          <div className="menu-chatContainer">
+            <Chat data={{
+              recipient: { _id: "global", name: "Global Chat" },
+              messages: []
+            }} />
+          </div>
+        )}
+
         <div className="help-section">
           <div className="help-tooltip-container">
             <button className="help-button">
@@ -221,7 +236,7 @@ const Menu = () => {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

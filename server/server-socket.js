@@ -86,10 +86,22 @@ const addUserToGame = (user) => {
 };
 
 const removeUserFromGame = (user) => {
-  gameLogic.removePlayer(user._id);
+  if (!user) return;
+  try {
+    if (gameLogic.gameState.players && gameLogic.gameState.players[user._id]) {
+      gameLogic.removePlayer(user._id);
+    }
+  } catch (error) {
+    console.log("Error removing user from game:", error);
+  }
 };
 
 const addUser = async (user, socket) => {
+  if (!socket) {
+    console.log("No socket provided for user", user._id);
+    return;
+  }
+
   const oldSocket = userToSocketMap[user._id];
   if (oldSocket && oldSocket.id !== socket.id) {
     // there was an old tab open for this user, force it to disconnect
@@ -179,72 +191,74 @@ const isUserHost = (userId) => {
   return false;
 };
 
-module.exports = {
-  init: (http) => {
-    io = require("socket.io")(http);
+const init = (http) => {
+  io = require("socket.io")(http, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"],
+    },
+  });
 
-    io.on("connection", (socket) => {
-      console.log(`socket has connected ${socket.id}`);
-      
-      socket.on("disconnect", async (reason) => {
-        const user = getUserFromSocketID(socket.id);
-        if (user) {
-          const roomId = await leaveRoom(user._id);
-          if (roomId) {
-            socket.leave(roomId);
-            io.to(roomId).emit("player-left", { userId: user._id });
-          }
-        }
-      });
+  io.on("connection", (socket) => {
+    console.log(`Socket connected: ${socket.id}`);
 
-      socket.on("create-room", async ({ userId, passcode }, callback) => {
-        try {
-          const roomId = await createRoom(userId, passcode);
-          socket.join(roomId);
-          callback({ success: true, roomId });
-        } catch (error) {
-          callback({ success: false, error: "Failed to create room" });
-        }
-      });
-
-      socket.on("join-room", async ({ userId, passcode }, callback) => {
-        const result = await joinRoom(userId, passcode);
-        if (result.success) {
-          socket.join(result.roomId);
-          io.to(result.roomId).emit("player-joined", { userId });
-        }
-        callback(result);
-      });
-
-      socket.on("game-end", async (gameResult) => {
-        const user = getUserFromSocketID(socket.id);
-        if (user) {
-          try {
-            const dbUser = await User.findById(user._id);
-            await dbUser.updateGameStats(gameResult);
-          } catch (error) {
-            console.error("Failed to update game stats:", error);
-          }
-        }
-      });
-
-      socket.on("move", (dir) => {
-        const user = getUserFromSocketID(socket.id);
-        if (user) gameLogic.movePlayer(user._id, dir, 20);
-      });
+    socket.on("disconnect", () => {
+      const user = getUserFromSocketID(socket.id);
+      removeUser(user, socket);
     });
-  },
 
-  addUser: addUser,
-  removeUser: removeUser,
+    socket.on("create-room", async ({ userId, passcode }, callback) => {
+      try {
+        const roomId = await createRoom(userId, passcode);
+        socket.join(roomId);
+        callback({ success: true, roomId });
+      } catch (error) {
+        callback({ success: false, error: "Failed to create room" });
+      }
+    });
 
-  getSocketFromUserID: getSocketFromUserID,
-  getUserFromSocketID: getUserFromSocketID,
-  getSocketFromSocketID: getSocketFromSocketID,
-  getAllConnectedUsers: getAllConnectedUsers,
-  addUserToGame: addUserToGame,
-  removeUserFromGame: removeUserFromGame,
-  startGame: startGame,
-  isUserHost: isUserHost,
+    socket.on("join-room", async ({ userId, passcode }, callback) => {
+      const result = await joinRoom(userId, passcode);
+      if (result.success) {
+        socket.join(result.roomId);
+        io.to(result.roomId).emit("player-joined", { userId });
+      }
+      callback(result);
+    });
+
+    socket.on("game-end", async (gameResult) => {
+      const user = getUserFromSocketID(socket.id);
+      if (user) {
+        try {
+          const dbUser = await User.findById(user._id);
+          await dbUser.updateGameStats(gameResult);
+        } catch (error) {
+          console.error("Failed to update game stats:", error);
+        }
+      }
+    });
+
+    socket.on("move", (dir) => {
+      const user = getUserFromSocketID(socket.id);
+      if (user) gameLogic.movePlayer(user._id, dir, 20);
+    });
+  });
+
+  return io;
+};
+
+module.exports = {
+  init,
+  addUser,
+  removeUser,
+
+  getSocketFromUserID,
+  getUserFromSocketID,
+  getSocketFromSocketID,
+  getAllConnectedUsers,
+  addUserToGame,
+  removeUserFromGame,
+  startGame,
+  isUserHost,
   getIo: () => io,
 };
