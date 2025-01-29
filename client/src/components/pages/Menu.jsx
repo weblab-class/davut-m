@@ -26,7 +26,7 @@ const Menu = () => {
     const passcode = Math.floor(100000 + Math.random() * 900000).toString();
     socket.emit("create-room", { userId, passcode }, (response) => {
       if (response.success) {
-        alert(`Your room passcode is: ${passcode}\nShare this with others to let them join!`);
+        alert(`Your room passcode is: ${passcode}\nThis will be sent to the global chat!`);
         navigate(`/game/${response.roomId}`);
       } else {
         setError("Failed to create room. Please try again.");
