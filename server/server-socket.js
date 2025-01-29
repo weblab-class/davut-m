@@ -1,5 +1,6 @@
 const gameLogic = require("./game-logic");
 const User = require("./models/user");
+const Message = require("./models/message");
 
 let io;
 let gameInterval = null;
@@ -144,7 +145,26 @@ const createRoom = async (userId, passcode) => {
   });
   
   // Update user's current room in database
+  const user = await User.findById(userId);
   await User.findByIdAndUpdate(userId, { currentRoom: roomId });
+  
+  // Create a system message about the new room
+  const systemMessage = new Message({
+    sender: {
+      _id: "system",
+      name: "🎮 Game System",
+    },
+    recipient: {
+      _id: "global",
+      name: "Global Chat",
+    },
+    content: `${user.name} created a new room! Join with passcode: ${passcode}`,
+  });
+
+  await systemMessage.save();
+  if (io) {
+    io.emit("message", systemMessage);
+  }
   
   return roomId;
 };
