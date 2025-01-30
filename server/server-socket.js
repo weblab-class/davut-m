@@ -62,21 +62,36 @@ const clearGrids = () => {
 }
 /** Start running game: game loop emits game states to all clients at 60 frames per second */
 const startRunningGame = async () => {
-  let winResetTimer = 0;
+  // Start the game first - this initializes the timer and game state
+  gameLogic.startGame();
+  
+  // Clear any existing colors
   await clearColor();
   
-  // Wait for all reveals to complete before starting the game loop
-  await round1Reveal();
-  await clearGrids();
-  await guessColor();
-  
-  setInterval(() => {
+  // Start the game loop immediately to show players
+  const gameLoop = setInterval(() => {
     gameLogic.updateGameState();
     sendGameState();
   }, 1000 / 60); // 60 frames per second
+  
+  // Do the reveals while game is running - players stay visible during this
+  await round1Reveal();
+  
+  // Clear the grid after reveals but keep players visible
+  await clearGrids();
+  
+  // Set the color players need to find
+  await guessColor();
 };
 
 const startGame = () => {
+  // Get all players in the room and spawn them
+  const room = Array.from(rooms.values())[0]; // Since we only have one room at a time
+  if (room) {
+    room.players.forEach(playerId => {
+      gameLogic.spawnPlayer(playerId);
+    });
+  }
   gameLogic.startGame();
   startRunningGame();
 };

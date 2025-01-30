@@ -23,7 +23,7 @@ const Game = () => {
     useEffect(() => {
       window.addEventListener("keydown", handleInput);
 
-      // Check if user is host
+      // Check if user is host and game state
       get("/api/ishost").then((data) => {
         setIsHost(data.isHost);
       });
@@ -37,14 +37,25 @@ const Game = () => {
 
     // update game periodically
     useEffect(() => {
+      // Clear canvas on mount
+      if (canvasRef.current && smallCanvasRef.current) {
+        const ctx = canvasRef.current.getContext("2d");
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        const smallCtx = smallCanvasRef.current.getContext("2d");
+        smallCtx.clearRect(0, 0, smallCanvasRef.current.width, smallCanvasRef.current.height);
+      }
+      
       socket.on("update", (update) => {
         processUpdate(update);
-        setTimeLeft(Math.ceil(update.timeLeft)); // Round up to nearest second
+        // Round to nearest second for display
+        setTimeLeft(Math.round(update.timeLeft));
+        setGameStarted(update.isGameStarted);
       });
+      
       return () => {
         socket.off("update");
       }
-    }, []);
+    }, [canvasRef.current, smallCanvasRef.current]);
     
     useEffect(() => {
       if (props.userId) {
@@ -56,16 +67,16 @@ const Game = () => {
     }, [props.userId]);
 
     const processUpdate = (update) => {
-      // set winnerModal if update has defined winner
-      // if (update.winner) {
-      //   setWinnerModal(
-      //     <div className="Game-winner">the winner is {update.winner} yay cool cool</div>
-      //   );
-      // } else {
-      //   setWinnerModal(null);
-      // }
-      drawCanvas(update, canvasRef);
-      drawSmallCanvas(update, smallCanvasRef);
+      if (update) {
+        drawCanvas(update, canvasRef);
+        drawSmallCanvas(update, smallCanvasRef);
+      } else {
+        // Clear canvas when no update
+        const ctx = canvasRef.current.getContext("2d");
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        const smallCtx = smallCanvasRef.current.getContext("2d");
+        smallCtx.clearRect(0, 0, smallCanvasRef.current.width, smallCanvasRef.current.height);
+      }
     };
     
     

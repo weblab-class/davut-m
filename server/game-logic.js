@@ -6,12 +6,12 @@ const colors = [
   "#DC143C", '#16213e',
 ];
 
-
+// List of items
 ITEMS = []
 const INITIAL_RADIUS = 50;
 const MAP_LENGTH =  800;
 
-
+// Divide an object into 3 groups
 function divideIntoGroups(obj) {
   const keys = Object.keys(obj);
   
@@ -33,7 +33,7 @@ function divideIntoGroups(obj) {
   return groups;
 }
 
-
+// Distribute grids across n groups
 const distributeGrids = (n) => {
   let grids = Array.from({ length: 25 }, (_, i) => i); // Grids labeled from 0 to 24
 
@@ -60,17 +60,14 @@ const distributeGrids = (n) => {
   return divideIntoGroups(gridAssignments);
 };
 
-
-
-
-/** Helper to generate a random integer */
+// Helper to generate a random integer
 const getRandomInt = (min, max) => {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
   };
   
-  /** Helper to generate a random position on the map */
+  // Helper to generate a random position on the map
   const getRandomPosition = () => {
     return {
       x: getRandomInt(0, MAP_LENGTH),
@@ -78,17 +75,18 @@ const getRandomInt = (min, max) => {
     };
   };
 
-
+// Game state
 const gameState = {
     winner: null,
     grids: {},
     players: {},
+    isGameStarted: false,
+    timeLeft: 60,
     correctColor: null,
-    timeLeft: 60, // 60 seconds timer
-    isStarted: false,
     lastUpdateTime: null,
 }
 
+// Check collision between two circles
 const checkCollision = (circle1, circle2) => {
   const dx = circle1.position.x - circle2.position.x;
   const dy = circle1.position.y - circle2.position.y;
@@ -96,6 +94,7 @@ const checkCollision = (circle1, circle2) => {
   return distance < (circle1.radius + circle2.radius);
 };
 
+// Handle collision between two players
 const handleCollision = (player1, player2, pushForce = 12.5) => {
   // Calculate direction vector from player1 to player2
   const dx = player2.position.x - player1.position.x;
@@ -124,6 +123,7 @@ const handleCollision = (player1, player2, pushForce = 12.5) => {
   player2.position.y = Math.max(0, Math.min(MAP_LENGTH, newY2));
 };
 
+// Spawn a new player
 const spawnPlayer = (id) => {
     gameState.players[id] = {
       position: getRandomPosition(),
@@ -132,8 +132,8 @@ const spawnPlayer = (id) => {
     };
   };
 
-
-  const movePlayer = (id, dir, speed) => {
+// Move a player in a specified direction
+const movePlayer = (id, dir, speed) => {
     // If player doesn't exist, don't move anything
     if (gameState.players[id] == undefined) {
       return;
@@ -172,8 +172,9 @@ const spawnPlayer = (id) => {
   
     // Move player
     gameState.players[id].position = desiredPosition;
-  };
+};
 
+// Check collisions between all pairs of players
 const checkAllCollisions = () => {
   const playerIds = Object.keys(gameState.players);
   
@@ -191,10 +192,12 @@ const checkAllCollisions = () => {
   }
 };
 
+// Reveal the correct color
 const correctColor = (n) => {
   gameState.correctColor = colors[getRandomInt(0, n)];
 };
 
+// Get the cell number from a position
 const getCellFromPosition = (x, y) => {
   // Canvas is divided into 5x5 grid, each cell is 100x100
   const cellSize = 800/5;
@@ -211,6 +214,8 @@ const getCellFromPosition = (x, y) => {
   // Ensure the result is within valid range
   return Math.max(0, Math.min(24, cellNumber));
 }
+
+// Reveal the correct color at the end of the round
 const roundEndReveal = () => {
   const new_grid = {};
   if (gameState.grids_copy) {
@@ -225,51 +230,94 @@ const roundEndReveal = () => {
   gameState.grids = new_grid;
 }}
 
+// Remove a player from the game
 const removePlayer = (id) => {
   if (gameState.players[id] != undefined) {
     delete gameState.players[id];
   }
 };
 
+// Check if there is a winner
 const checkWin = () => {
+  if (!gameState.isGameStarted || !gameState.correctColor) return false;
+
+  // Only check for winners if timer has reached 0
+  if (gameState.timeLeft > 0) return false;
+
   const winners = [];
-  for (const [key, value] of Object.entries(gameState.players)){
-    const cell_number = getCellFromPosition(value.position.x, value.position.y);
-    if (gameState.grids_copy[cell_number] !== gameState.correctColor) {
-      removePlayer(key);
+  const losers = [];
+  
+  // Check each player's position
+  Object.entries(gameState.players).forEach(([playerId, player]) => {
+    const cell = getCellFromPosition(player.position.x, player.position.y);
+    if (cell !== null && gameState.grids_copy[cell] === gameState.correctColor) {
+      winners.push(playerId);
+    } else {
+      losers.push(playerId);
     }
-    else{
-      winners.push(key);
-    }
+  });
+
+  if (winners.length > 0) {
+    gameState.winner = winners;
+    // Remove losing players from display
+    losers.forEach(loserId => {
+      delete gameState.players[loserId];
+    });
+    gameState.isGameStarted = false;
+    return true;
   }
-  gameState.winner = winners;
-}
+
+  return false;
+};
+
+// Update the game state
+const updateGameState = () => {
+  if (!gameState.isGameStarted) return;
+
+  checkAllCollisions();
+  updateTimer();
+
+  if (gameState.timeLeft <= 0 || checkWin()) {
+    // Game has ended
+    const winners = gameState.winner || [];
+    io.emit("game-end", {
+      winners: winners,
+      message: winners.length > 0 ? `Winners: ${winners.join(", ")}` : "No winners!"
+    });
+    
+    // Reset game state after brief delay
+    setTimeout(() => {
+      gameState.isGameStarted = false;
+      gameState.players = {};
+      gameState.grids = {};
+      gameState.correctColor = null;
+      gameState.winner = null;
+      io.emit("return-to-menu");
+    }, 3000);
+  }
+};
+
+// Start the game
 const startGame = () => {
-  gameState.isStarted = true;
+  gameState.isGameStarted = true;
   gameState.timeLeft = 60;
+  gameState.winner = null;
+  gameState.correctColor = null;
   gameState.lastUpdateTime = Date.now(); // Add timestamp for tracking actual elapsed time
 };
 
+// Update the timer
 const updateTimer = () => {
-  if (gameState.isStarted && gameState.timeLeft > 0) {
+  if (gameState.timeLeft > 0) {
     const now = Date.now();
-    const elapsed = (now - gameState.lastUpdateTime) / 1000; // Convert to seconds
-    gameState.timeLeft -= elapsed;
-    gameState.lastUpdateTime = now;
-    
-    // Ensure we don't go below 0
-    if (gameState.timeLeft < 0) {
-      gameState.timeLeft = 0;
+    if (!gameState.lastUpdateTime) {
+      gameState.lastUpdateTime = now;
+      return;
     }
-  }
-};
-
-const updateGameState = () => {
-  checkAllCollisions();
-  updateTimer();
-  if (gameState.timeLeft <=0) {
-    roundEndReveal();
-    checkWin();
+    
+    const elapsed = (now - gameState.lastUpdateTime) / 1000; // Convert to seconds
+    gameState.timeLeft = Math.max(0, gameState.timeLeft - elapsed);
+    gameState.lastUpdateTime = now;
   }
 };
 
@@ -288,5 +336,5 @@ module.exports = {
     colors,
     getRandomInt,
     getRandomPosition,
-    getCellFromPosition,
-  };
+    getCellFromPosition
+};
