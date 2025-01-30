@@ -277,23 +277,31 @@ const updateGameState = () => {
   checkAllCollisions();
   updateTimer();
 
-  if (gameState.timeLeft <= 0 || checkWin()) {
-    // Game has ended
-    const winners = gameState.winner || [];
-    io.emit("game-end", {
-      winners: winners,
-      message: winners.length > 0 ? `Winners: ${winners.join(", ")}` : "No winners!"
+  // When timer hits zero, reveal correct cells and check winners
+  if (gameState.timeLeft <= 0 && !gameState.winner) {
+    // Show all cells with the correct color
+    gameState.grids = {};
+    Object.entries(gameState.grids_copy).forEach(([cell, color]) => {
+      if (color === gameState.correctColor) {
+        gameState.grids[cell] = color;
+      }
     });
-    
-    // Reset game state after brief delay
-    setTimeout(() => {
-      gameState.isGameStarted = false;
-      gameState.players = {};
-      gameState.grids = {};
-      gameState.correctColor = null;
-      gameState.winner = null;
-      io.emit("return-to-menu");
-    }, 3000);
+
+    // Check winners and remove losers
+    const winners = [];
+    Object.entries(gameState.players).forEach(([playerId, player]) => {
+      const cell = getCellFromPosition(player.position.x, player.position.y);
+      if (cell !== null && gameState.grids_copy[cell] === gameState.correctColor) {
+        winners.push(playerId);
+      } else {
+        delete gameState.players[playerId];
+      }
+    });
+
+    if (winners.length > 0) {
+      gameState.winner = winners;
+    }
+    gameState.isGameStarted = false;
   }
 };
 
