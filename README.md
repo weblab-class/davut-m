@@ -1,10 +1,13 @@
 ## Outside sources
 Note that following files were taken from Weblab's Catbook and used without changing:
-  server/models/message.js
-  client/src/components/modules/Chat.jsx
-  client/src/components/modules/ChatList.jsx
-  client/src/components/modules/NewPostInput.jsx
-  client/src/components/modules/SingleMessage.jsx
+
+```
+server/models/message.js
+client/src/components/modules/Chat.jsx
+client/src/components/modules/ChatList.jsx
+client/src/components/modules/NewPostInput.jsx
+client/src/components/modules/SingleMessage.jsx
+```
 
 # How to code a webapp with this skeleton
 
